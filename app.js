@@ -78,6 +78,11 @@ async function buscarTodos(montarConsulta) {
 
 function mensagemDeErro(e) {
   const texto = String((e && (e.message || e.error_description)) || e || "");
+  const bloqueio = texto.match(/RDS_BLOQUEADO:(\d+)/);
+  if (bloqueio) {
+    const min = Number(bloqueio[1]);
+    return `Foram digitadas muitas senhas erradas.\nPor segurança, tente de novo em ${min} minuto${min > 1 ? "s" : ""}.`;
+  }
   if (/failed to fetch|networkerror|load failed/i.test(texto)) {
     return "Sem conexão com a internet. Confira a conexão e tente de novo.";
   }
@@ -270,8 +275,8 @@ async function entrar(ev) {
       await aviso("Senha provisória",
         `Olá, ${usuario}!\nVocê está usando uma senha provisória.\nCadastre agora sua nova senha definitiva.`);
       const nova = await pedirSenha("Senha definitiva", "Digite sua NOVA senha definitiva:");
-      if (!nova || nova.trim().length < 4) {
-        if (nova !== null) await aviso("Atenção", "A senha deve ter no mínimo 4 caracteres!", "aviso");
+      if (!nova || nova.trim().length < 6) {
+        if (nova !== null) await aviso("Atenção", "A senha deve ter no mínimo 6 caracteres!", "aviso");
         await aviso("Login cancelado", "A senha não foi alterada. O login foi cancelado.", "aviso");
         return sairDoSupabase();
       }
@@ -306,8 +311,8 @@ async function redefinirSenha() {
     }
 
     const nova = await pedirSenha(primeiroAcesso ? "Primeiro acesso" : "Nova senha", `Digite a nova senha para “${socio}”:`);
-    if (!nova || nova.trim().length < 4) {
-      if (nova !== null) await aviso("Atenção", "A senha deve ter no mínimo 4 caracteres!", "aviso");
+    if (!nova || nova.trim().length < 6) {
+      if (nova !== null) await aviso("Atenção", "A senha deve ter no mínimo 6 caracteres!", "aviso");
       return;
     }
 

@@ -1,6 +1,6 @@
 // Guarda as telas do app no aparelho para abrir rápido. Os dados (Supabase) nunca ficam guardados aqui.
 // Ao publicar uma versão nova, troque o número abaixo.
-const VERSAO = "rds-web-1";
+const VERSAO = "rds-web-2";
 const ARQUIVOS = [
   "./", "index.html", "estilo.css", "calculos.js", "app.js", "manifest.webmanifest",
   "icones/icone-192.png", "icones/apple-touch-icon.png",
