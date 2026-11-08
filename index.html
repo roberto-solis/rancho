@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rancho Dina Solis</title>
+  <meta name="description" content="Controle de saldos, acertos e fundo de reserva entre os sócios.">
+  <meta name="theme-color" content="#2563EB">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icones/icone-192.png">
+  <link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Rancho">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<!-- ================================================================ LOGIN -->
+<section id="tela-login" class="login" hidden>
+  <div class="login-marca">
+    <div class="login-icone">🏡</div>
+    <h1>Rancho <br>Dina Solis</h1>
+    <p>Controle de saldos, acertos e<br>fundo de reserva entre os sócios.</p>
+  </div>
+  <form id="form-login" class="login-form" autocomplete="on">
+    <h2>Bem-vindo(a) de volta</h2>
+    <p class="suave">Entre com seu sócio e senha para continuar.</p>
+    <label>Sócio
+      <select id="login-socio"></select>
+    </label>
+    <label>Senha de acesso
+      <span class="campo-senha">
+        <input id="login-senha" type="password" autocomplete="current-password" placeholder="••••••••">
+        <button type="button" id="btn-olho" class="btn-olho" aria-label="Mostrar senha">👁</button>
+      </span>
+    </label>
+    <button type="submit" class="btn btn-primario btn-grande" id="btn-entrar">Entrar no sistema</button>
+    <button type="button" class="btn btn-link" id="btn-redefinir">🔑 Criar / redefinir senha</button>
+  </form>
+</section>
+
+<!-- ================================================================ APLICATIVO -->
+<section id="tela-app" hidden>
+  <header class="topo">
+    <span class="topo-titulo">🏡 Rancho Dina Solis</span>
+    <button type="button" class="chip-usuario" id="chip-usuario" title="Sair">
+      <span class="avatar" id="avatar-usuario"></span>
+      <span class="nome-usuario" id="nome-usuario"></span>
+      <span class="sair">Sair</span>
+    </button>
+  </header>
+
+  <nav class="barra">
+    <div class="abas">
+      <button type="button" class="aba" data-pagina="lanc">📋 <span>Lançamentos Diários</span></button>
+      <button type="button" class="aba" data-pagina="acer">🤝 <span>Acertos</span></button>
+      <button type="button" class="aba" data-pagina="fundo">🏦 <span>Fundo de Reserva</span></button>
+      <button type="button" class="aba" data-pagina="evol">📊 <span>Evolução dos Gastos</span></button>
+      <button type="button" class="aba" data-pagina="soc">👥 <span>Sócios</span></button>
+    </div>
+    <div class="seletor-mes">
+      <button type="button" class="seta" id="mes-anterior" aria-label="Mês anterior">◀</button>
+      <select id="combo-mes" aria-label="Mês"></select>
+      <button type="button" class="seta" id="mes-seguinte" aria-label="Próximo mês">▶</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ================================================ LANÇAMENTOS DIÁRIOS -->
+    <div class="pagina com-form" id="pagina-lanc">
+      <aside class="painel-form" id="lanc-painel">
+        <form class="card form-lanc" id="lanc-form" novalidate>
+          <div class="form-titulo">
+            <h3 class="titulo-form">Novo lançamento</h3>
+            <span class="selo" hidden>EDITANDO</span>
+            <button type="button" class="fechar-folha" aria-label="Fechar">✕</button>
+          </div>
+          <label>Data da 1ª parcela / pagamento único <input type="date" id="lanc-data"></label>
+          <label>Sócio original <select id="lanc-socio"></select></label>
+          <label>Tipo
+            <select id="lanc-tipo"><option>Despesa</option><option>Receita</option></select>
+          </label>
+          <label>Descrição <input type="text" id="lanc-desc" placeholder="Ex.: Compra de tintas" autocapitalize="characters"></label>
+          <div class="linha-2">
+            <label>Valor da parcela (R$) <input type="text" id="lanc-valor" inputmode="numeric" placeholder="0,00" class="centro moeda"></label>
+            <label class="so-novo">Parcelas <input type="number" id="lanc-parcelas" min="1" max="120" value="1" inputmode="numeric" class="centro"></label>
+          </div>
+          <div class="botoes-form">
+            <button type="submit" class="btn btn-primario btn-salvar">＋ Adicionar lançamento</button>
+            <button type="button" class="btn btn-sucesso so-novo" id="lanc-todos">👥 Adicionar a todos os sócios</button>
+            <div class="botoes-acao">
+              <button type="button" class="btn btn-ambar btn-alterar" disabled>✎ Alterar</button>
+              <button type="button" class="btn btn-perigo btn-excluir" disabled>🗑 Excluir</button>
+              <button type="button" class="btn btn-neutro btn-limpar">↺ Limpar</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <div class="coluna-lista">
+        <div class="card filtros">
+          <button type="button" class="filtros-cabeca">
+            <span>🔍 Filtros</span><span class="filtros-resumo"></span><span class="seta-filtro">▾</span>
+          </button>
+          <form class="filtros-campos filtros-lanc" id="lanc-filtros">
+            <label>Data inicial <input type="date" id="lanc-fl-ini"></label>
+            <label>Data final <input type="date" id="lanc-fl-fim"></label>
+            <label>Sócio <select id="lanc-fl-socio"></select></label>
+            <label>Tipo <select id="lanc-fl-tipo"><option>Todos</option><option>Despesa</option><option>Receita</option></select></label>
+            <label class="esticar">Descrição <input type="search" id="lanc-fl-desc" placeholder="Buscar..."></label>
+            <label>Valor <input type="text" id="lanc-fl-valor" inputmode="numeric" placeholder="0,00" class="centro moeda"></label>
+            <div class="filtros-botoes">
+              <button type="submit" class="btn btn-primario">Filtrar</button>
+              <button type="button" class="btn btn-contorno btn-limpar-filtros" title="Limpar filtros">✕</button>
+            </div>
+          </form>
+        </div>
+        <div class="card tabela-card">
+          <div class="totais">
+            <span class="tot-desp" id="lanc-tot-desp"></span>
+            <span class="tot-rec" id="lanc-tot-rec"></span>
+            <span class="pilula" id="lanc-tot-geral"><small>Total filtrado</small> <b id="lanc-tot-valor">R$ 0,00</b></span>
+          </div>
+          <div class="tabela" id="lanc-tabela"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================ ACERTOS -->
+    <div class="pagina com-form" id="pagina-acer">
+      <aside class="painel-form" id="acer-painel">
+        <form class="card form-lanc" id="acer-form" novalidate>
+          <div class="form-titulo">
+            <h3 class="titulo-form">Novo acerto</h3>
+            <span class="selo" hidden>EDITANDO</span>
+            <button type="button" class="fechar-folha" aria-label="Fechar">✕</button>
+          </div>
+          <label>Data do acerto <input type="date" id="acer-data"></label>
+          <label>Descrição <input type="text" id="acer-desc" placeholder="Digite a descrição" autocapitalize="characters"></label>
+          <label>Sócio pagador <select id="acer-pagador"></select></label>
+          <label>Sócio recebedor <select id="acer-recebedor"></select></label>
+          <label>Valor do acerto (R$) <input type="text" id="acer-valor" inputmode="numeric" placeholder="0,00" class="centro moeda"></label>
+          <div class="botoes-form">
+            <button type="submit" class="btn btn-primario btn-salvar">✓ Aplicar acerto</button>
+            <div class="botoes-acao">
+              <button type="button" class="btn btn-ambar btn-alterar" disabled>✎ Alterar</button>
+              <button type="button" class="btn btn-perigo btn-excluir" disabled>🗑 Excluir</button>
+              <button type="button" class="btn btn-neutro btn-limpar">↺ Limpar</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <div class="coluna-lista">
+        <div class="grade-saldos" id="acer-saldos"></div>
+        <div class="card bloco-sugestoes">
+          <div class="bloco-cab">
+            <h3>💡 Sugestões de acerto</h3>
+            <span class="suave">toque para preencher o acerto</span>
+          </div>
+          <div class="sugestoes" id="acer-sugestoes"></div>
+        </div>
+        <div class="card tabela-card">
+          <div class="totais"><h3>Histórico de acertos</h3></div>
+          <div class="tabela" id="acer-tabela"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================ FUNDO DE RESERVA -->
+    <div class="pagina com-form fundo" id="pagina-fundo">
+      <div class="alerta" id="fundo-alerta" hidden>
+        <span class="alerta-icone">⏰</span>
+        <div id="fundo-alerta-linhas"></div>
+        <button type="button" class="alerta-fechar" id="fundo-alerta-fechar" aria-label="Fechar aviso">✕</button>
+      </div>
+      <aside class="painel-form" id="fundo-painel">
+        <form class="card form-lanc" id="fundo-form" novalidate>
+          <div class="form-titulo">
+            <h3 class="titulo-form">Novo lançamento</h3>
+            <span class="selo" hidden>EDITANDO</span>
+            <button type="button" class="fechar-folha" aria-label="Fechar">✕</button>
+          </div>
+          <label>Data da 1ª parcela / pagamento único <input type="date" id="fundo-data"></label>
+          <label>Sócio original <select id="fundo-socio"></select></label>
+          <label>Tipo
+            <select id="fundo-tipo"><option>Débito</option><option>Crédito</option></select>
+          </label>
+          <label>Descrição <input type="text" id="fundo-desc" placeholder="Ex.: Depósito inicial" autocapitalize="characters"></label>
+          <div class="linha-2">
+            <label>Valor da parcela (R$) <input type="text" id="fundo-valor" inputmode="numeric" placeholder="0,00" class="centro moeda"></label>
+            <label class="so-novo">Parcelas <input type="number" id="fundo-parcelas" min="1" max="120" value="1" inputmode="numeric" class="centro"></label>
+          </div>
+          <div class="botoes-form">
+            <button type="submit" class="btn btn-ambar btn-salvar">＋ Adicionar lançamento</button>
+            <button type="button" class="btn btn-sucesso so-novo" id="fundo-todos">👥 Adicionar a todos os sócios</button>
+            <div class="botoes-acao">
+              <button type="button" class="btn btn-ambar btn-alterar" disabled>✎ Alterar</button>
+              <button type="button" class="btn btn-perigo btn-excluir" disabled>🗑 Excluir</button>
+              <button type="button" class="btn btn-neutro btn-limpar">↺ Limpar</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <div class="coluna-lista">
+        <div class="card filtros">
+          <button type="button" class="filtros-cabeca">
+            <span>🔍 Filtros</span><span class="filtros-resumo"></span><span class="seta-filtro">▾</span>
+          </button>
+          <form class="filtros-campos filtros-fundo" id="fundo-filtros">
+            <label>Início <input type="date" id="fundo-fl-ini"></label>
+            <label>Fim <input type="date" id="fundo-fl-fim"></label>
+            <label>Alvo <select id="fundo-fl-socio"></select></label>
+            <label>Tipo <select id="fundo-fl-tipo"><option>Todos</option><option>Débito</option><option>Crédito</option></select></label>
+            <label class="esticar">Descrição <input type="search" id="fundo-fl-desc" placeholder="Buscar..."></label>
+            <div class="filtros-botoes">
+              <button type="submit" class="btn btn-ambar">Filtrar</button>
+              <button type="button" class="btn btn-contorno btn-limpar-filtros" title="Limpar filtros">✕</button>
+            </div>
+          </form>
+        </div>
+        <div class="card tabela-card">
+          <div class="totais">
+            <h3>Movimentações do fundo</h3>
+            <span class="pilula ambar"><small>Saldo do fundo até hoje</small> <b id="fundo-saldo">R$ 0,00</b></span>
+          </div>
+          <div class="tabela" id="fundo-tabela"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================ EVOLUÇÃO DOS GASTOS -->
+    <div class="pagina" id="pagina-evol">
+      <div class="kpis">
+        <div class="card kpi"><span>Total em 12 meses</span><b id="evol-total">—</b></div>
+        <div class="card kpi"><span>Média mensal</span><b id="evol-media">—</b></div>
+        <div class="card kpi"><span>Mês selecionado</span><b id="evol-atual">—</b></div>
+        <div class="card kpi"><span>Maior mês</span><b id="evol-maior">—</b></div>
+        <button type="button" class="btn btn-primario" id="evol-atualizar">↻ Atualizar</button>
+      </div>
+      <div class="card grafico-card">
+        <div class="grafico-rolagem"><div id="evol-grafico"></div></div>
+        <div class="legenda" id="evol-legenda"></div>
+      </div>
+    </div>
+
+    <!-- ================================================ SÓCIOS -->
+    <div class="pagina com-form" id="pagina-soc">
+      <aside class="painel-form" id="soc-painel">
+        <form class="card form-lanc" id="soc-form" novalidate>
+          <div class="form-titulo">
+            <h3 class="titulo-form">Novo sócio</h3>
+            <span class="selo" hidden>EDITANDO</span>
+            <button type="button" class="fechar-folha" aria-label="Fechar">✕</button>
+          </div>
+          <label>Nome (ex.: Maria/José) <input type="text" id="soc-nome" placeholder="Nome do sócio ou do casal" maxlength="40"></label>
+          <label>Data de entrada <input type="date" id="soc-entrada"></label>
+          <label>Data de saída (vazio = sócio ativo) <input type="date" id="soc-saida"></label>
+          <p class="nota">As despesas são divididas entre quem era sócio na data de cada lançamento.
+            O nome não pode ser alterado depois de gravado, porque identifica o sócio nos lançamentos e na senha.</p>
+          <div class="botoes-form">
+            <button type="submit" class="btn btn-primario btn-salvar">＋ Adicionar sócio</button>
+            <div class="botoes-acao">
+              <button type="button" class="btn btn-ambar btn-alterar" disabled>✎ Alterar</button>
+              <button type="button" class="btn btn-perigo btn-excluir" disabled>🗑 Excluir</button>
+              <button type="button" class="btn btn-neutro btn-limpar">↺ Limpar</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <div class="coluna-lista">
+        <div class="card divisao" id="soc-divisao">
+          <div>
+            <h3>⚖ Divisão das despesas</h3>
+            <p id="soc-divisao-texto"></p>
+          </div>
+          <button type="button" class="btn btn-primario" id="soc-divisao-btn">Alterar divisão</button>
+        </div>
+        <div class="card tabela-card">
+          <div class="totais">
+            <h3>Sócios cadastrados</h3>
+            <span class="suave resumo-direita" id="soc-resumo"></span>
+          </div>
+          <div class="tabela" id="soc-tabela"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <button type="button" class="fab" id="fab" aria-label="Novo">＋</button>
+
+  <nav class="nav-inferior">
+    <button type="button" class="aba" data-pagina="lanc"><span class="ic">📋</span>Lançamentos</button>
+    <button type="button" class="aba" data-pagina="acer"><span class="ic">🤝</span>Acertos</button>
+    <button type="button" class="aba" data-pagina="fundo"><span class="ic">🏦</span>Fundo</button>
+    <button type="button" class="aba" data-pagina="evol"><span class="ic">📊</span>Gastos</button>
+    <button type="button" class="aba" data-pagina="soc"><span class="ic">👥</span>Sócios</button>
+  </nav>
+</section>
+
+<div id="carregando" class="carregando" hidden><div class="roda"></div></div>
+<div id="modais"></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
+<script src="calculos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
