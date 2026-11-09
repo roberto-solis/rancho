@@ -315,9 +315,10 @@ function gastosPorMes(linhas, refA, refM) {
   const agrupado = new Map();
   for (const item of linhas) {
     if (!String(item.tipo || "").toLowerCase().includes("despesa")) continue;
-    const desc = String(item.descricao || "").toLowerCase();
+    // sem acentos: "CONDOMÍNIO", "condominio" e "CONDOMÏNIO" contam igual
+    const desc = String(item.descricao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     let cat = "Outros";
-    if (desc.includes("condominio") || desc.includes("condomínio")) cat = "Condomínio";
+    if (desc.includes("condominio")) cat = "Condomínio";
     else if (desc.includes("internet")) cat = "Internet";
     else if (desc.includes("energia") || desc.includes("cemig")) cat = "Energia";
     const dt = dataDoBanco(item.data);
