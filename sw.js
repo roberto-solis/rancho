@@ -1,6 +1,6 @@
 // Guarda as telas do app no aparelho para abrir rápido. Os dados (Supabase) nunca ficam guardados aqui.
 // Ao publicar uma versão nova, troque o número abaixo.
-const VERSAO = "rds-web-7";
+const VERSAO = "rds-web-8";
 const ARQUIVOS = [
   "./", "index.html", "estilo.css", "calculos.js", "app.js", "manifest.webmanifest",
   "icones/icone-192.png", "icones/apple-touch-icon.png", "icones/foto-rancho.jpg",
@@ -8,7 +8,10 @@ const ARQUIVOS = [
 ];
 
 self.addEventListener("install", (ev) => {
-  ev.waitUntil(caches.open(VERSAO).then((c) => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));
+  // cache: "reload" = baixa do site, sem usar cópia velha guardada pelo navegador
+  ev.waitUntil(caches.open(VERSAO)
+    .then((c) => c.addAll(ARQUIVOS.map((u) => new Request(u, { cache: "reload" }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (ev) => {
@@ -31,9 +34,9 @@ self.addEventListener("fetch", (ev) => {
     ev.respondWith(caches.match(req).then((r) => r || fetch(req)));
     return;
   }
-  // Telas do app: tenta a internet primeiro (pega atualizações); sem internet, usa a cópia
+  // Telas do app: sempre confere no site se há versão nova; sem internet, usa a cópia
   ev.respondWith(
-    fetch(req)
+    fetch(new Request(req.url, { cache: "no-cache" }))   // pelo endereço: funciona também ao abrir o app
       .then((resp) => {
         if (resp.ok) {
           const copia = resp.clone();
