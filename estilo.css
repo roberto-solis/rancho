@@ -120,9 +120,9 @@ select { appearance: none; -webkit-appearance: none; padding-right: 28px; cursor
 }
 /* foto encostada no topo e nas laterais; a parte de baixo se dissolve no azul */
 .login-foto {
-  display: block; width: 100%; height: auto; aspect-ratio: 900 / 508; object-fit: cover;
-  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
-  mask-image: linear-gradient(to bottom, #000 72%, transparent);
+  display: block; width: 100%; height: 55vh; min-height: 220px; object-fit: cover; object-position: 50% 60%;
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
 }
 .login-marca h1 { font-size: 40px; line-height: 1.1; margin: 0 0 12px; }
 .login-marca p { color: #BFDBFE; margin: 0; font-size: 16px; }
@@ -412,8 +412,11 @@ body:has(.fundo-modal) .carregando { display: none; }
   input, select { height: 46px; font-size: 16px; }   /* 16px: o iPhone não dá zoom */
 
   .login { flex-direction: column; }
-  .login-marca { flex: 0 0 auto; }
-  .login-textos { padding: 0 20px 22px; }
+  /* a foto ocupa todo o espaço que sobra acima do formulário (sem precisar rolar) */
+  .login-marca { flex: 1 1 auto; min-height: 0; }
+  .login-foto { flex: 1 1 0; height: auto; min-height: 110px; }
+  .login-textos { flex: 0 0 auto; padding: 0 20px 18px; }
+  .login-form { flex: 0 0 auto; }
   .login-marca h1 { font-size: 30px; margin: 10px 0 6px; }
   .login-marca h1 br { display: none; }
   .login-marca p { font-size: 14px; }
