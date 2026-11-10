@@ -436,6 +436,7 @@ class Lista {
     this.corpo.querySelectorAll(".linha").forEach((l) =>
       l.classList.toggle("selecionada", this.selecionados.has(Number(l.dataset.id))));
     this.atualizarBotoes();
+    if (this.cfg.aoSelecionar) this.cfg.aoSelecionar([...this.selecionados]);
   }
 
   async abrirAcoes(id) {
@@ -447,12 +448,14 @@ class Lista {
     const escolha = await modal({
       conteudo: resumo, deBaixo: true,
       botoes: [
+        ...(this.cfg.acaoExtra ? [{ texto: this.cfg.acaoExtra.texto, classe: "btn-primario", valor: "extra" }] : []),
         { texto: "✎  Alterar", classe: "btn-ambar", valor: "alterar" },
         { texto: "🗑  Excluir", classe: "btn-perigo", valor: "excluir" },
         { texto: "Cancelar", classe: "btn-contorno", valor: null, cancelar: true },
       ],
     });
-    if (escolha === "alterar") await this.cfg.aoEditar(id);
+    if (escolha === "extra") await this.cfg.acaoExtra.fazer(id);
+    else if (escolha === "alterar") await this.cfg.aoEditar(id);
     else if (escolha === "excluir") await this.cfg.aoExcluir([id]);
   }
 }
@@ -811,22 +814,8 @@ function desenharAcertos() {
   const saldos = calcularSaldos(estado.todos, c)["Manutenção"];
   estado.saldos = saldos;
 
-  // Cards: sócios ativos + ex-sócios que ainda têm saldo a acertar
-  const ativos = c.ativosHoje;
-  const grade = $("acer-saldos");
-  grade.replaceChildren();
-  for (const socio of c.todos.filter((p) => ativos.includes(p) || Math.abs(saldos[p] || 0) > 0.05)) {
-    const valor = saldos[socio] || 0;
-    let status = ["dia", "em dia"];
-    if (valor > 0.05) status = ["receber", "a receber"];
-    else if (valor < -0.05) status = ["pagar", "a pagar"];
-    const card = el("div", "card saldo-socio");
-    const topo = el("div", "saldo-topo");
-    topo.append(el("span", "avatar", iniciais(socio)), el("span", "saldo-nome", socio),
-      el("span", "status " + status[0], status[1]));
-    card.append(topo, el("div", "saldo-valor " + (valor >= 0 ? "pos" : "neg"), brl(valor)));
-    grade.append(card);
-  }
+  if (estado.acertoVisto && !estado.todos.some((l) => l.id === estado.acertoVisto)) estado.acertoVisto = null;
+  pintarCartoes();
 
   const caixa = $("acer-sugestoes");
   caixa.replaceChildren();
@@ -850,6 +839,54 @@ function desenharAcertos() {
   listas.acer.definir(linhas);
 }
 
+// Cartões de saldo: os de hoje ou, com um acerto escolhido no histórico, os de logo antes dele.
+// É só para consultar: nada é gravado.
+function pintarCartoes() {
+  const c = estado.cadastro;
+  let valores = estado.saldos, depois = null, ativos = c.ativosHoje;
+  const acerto = estado.acertoVisto && estado.todos.find((l) => l.id === estado.acertoVisto);
+  if (acerto) {
+    const dia = paraData(acerto.data) || hoje();
+    const anteriores = estado.todos.filter((l) => l.id < acerto.id);   // os que existiam quando ele foi gravado
+    valores = calcularSaldos(anteriores, c, dia)["Manutenção"];
+    depois = calcularSaldos([...anteriores, acerto], c, dia)["Manutenção"];
+    ativos = c.ativosEm(dia);
+    const p = partesDoAjuste(acerto.descricao);
+    $("acer-antes-texto").textContent =
+      `👁 Saldos de antes do acerto de ${acerto.data} · ${p.fluxo || acerto.descricao} · ${valorTexto(acerto.valores)}`;
+  }
+  $("acer-antes").hidden = !acerto;
+  document.querySelector("#pagina-acer .bloco-sugestoes").hidden = !!acerto;   // sugestões são de hoje
+
+  const grade = $("acer-saldos");
+  grade.replaceChildren();
+  // sócios ativos + ex-sócios que ainda têm saldo a acertar
+  for (const socio of c.todos.filter((p) => ativos.includes(p) || Math.abs(valores[p] || 0) > 0.05
+      || (depois && Math.abs(depois[p] || 0) > 0.05))) {
+    const valor = valores[socio] || 0;
+    let status = ["dia", "em dia"];
+    if (valor > 0.05) status = ["receber", "a receber"];
+    else if (valor < -0.05) status = ["pagar", "a pagar"];
+    const card = el("div", "card saldo-socio" + (acerto ? " antes" : ""));   // amarelo = saldos de antes
+    const topo = el("div", "saldo-topo");
+    topo.append(el("span", "avatar", iniciais(socio)), el("span", "saldo-nome", socio),
+      el("span", "status " + status[0], status[1]));
+    const caixaValor = el("div", "saldo-valores");
+    caixaValor.append(el("div", "saldo-valor " + (valor >= 0 ? "pos" : "neg"), brl(valor)));
+    if (depois && Math.abs((depois[socio] || 0) - valor) > 0.005) {
+      caixaValor.append(el("div", "saldo-depois", `depois do acerto: ${brl(depois[socio] || 0)}`));
+    }
+    card.append(topo, caixaValor);
+    grade.append(card);
+  }
+}
+
+function verSaldosAntes(id) {
+  estado.acertoVisto = id;
+  pintarCartoes();
+  if (id && ehCelular()) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function preencherAcerto(s) {
   if (formularios.acer.editando) limparAcerto(false);
   const h = hoje();
@@ -870,6 +907,7 @@ function limparAcerto(redesenhar = true) {
   $("acer-desc").value = "";
   $("acer-valor").value = "";
   listas.acer.selecionados.clear();
+  if (estado.acertoVisto) verSaldosAntes(null);
   if (redesenhar) listas.acer.desenhar();
 }
 
@@ -1491,6 +1529,8 @@ function criarListas() {
     info: (l) => `${l.data} · ${l._texto}`,
     resumo: (l) => [l._fluxo, `${l.data} · ${l._texto} · ${valorTexto(l.valores)}`],
     vazio: "Nenhum acerto registrado.", aoEditar: editarAcerto, aoExcluir: excluirAcerto,
+    aoSelecionar: (ids) => verSaldosAntes(ids.length === 1 ? ids[0] : null),
+    acaoExtra: { texto: "👁  Ver saldos de antes", fazer: (id) => verSaldosAntes(id) },
   });
   listas.fundo = new Lista({
     id: "fundo-tabela", form: $("fundo-form"),
@@ -1599,6 +1639,11 @@ function ligarEventos() {
   $("fundo-alerta-fechar").addEventListener("click", () => { estado.alertaFechado = true; $("fundo-alerta").hidden = true; });
   $("evol-atualizar").addEventListener("click", () => acao(async () => { await recarregar(); toast("Gráfico atualizado"); }));
   $("soc-divisao-btn").addEventListener("click", () => abrirDivisao());
+  $("acer-antes-voltar").addEventListener("click", () => {
+    listas.acer.selecionados.clear();
+    listas.acer.desenhar();
+    verSaldosAntes(null);
+  });
   $("fab").addEventListener("click", () => {
     const chave = estado.pagina;
     const limpar = { lanc: limparLanc, acer: limparAcerto, fundo: limparFundo, soc: limparSocio }[chave];

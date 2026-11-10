@@ -286,6 +286,15 @@ main { flex: 1; padding: 10px 12px 12px; min-height: 0; }
 .saldo-valor { font-size: 21px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .saldo-valor.pos { color: var(--sucesso); }
 .saldo-valor.neg { color: var(--perigo); }
+.aviso-antes {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px;
+  background: var(--ambar-suave); border: 1px solid #FDE68A; border-radius: 8px;
+  color: var(--ambar); font-weight: 600; font-size: 14px;
+}
+.aviso-antes span { flex: 1; min-width: 200px; }
+.aviso-antes .btn { height: 32px; font-size: 13px; }
+.saldo-socio.antes { background: var(--ambar-suave); border-color: #F59E0B; }
+.saldo-depois { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
 .bloco-sugestoes { padding: 10px 12px; }
 .bloco-cab { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .bloco-cab h3 { font-size: 16px; }
@@ -512,6 +521,8 @@ body:has(.fundo-modal) .carregando { display: none; }
   .saldo-topo .avatar { grid-row: span 2; width: 34px; height: 34px; font-size: 12px; }
   .saldo-topo .status { margin-left: 0; justify-self: start; }
   .saldo-valor { font-size: 19px; margin-top: 0; }
+  .saldo-valores { text-align: right; }
+  .aviso-antes .btn { width: 100%; height: 40px; }
   .sugestoes { grid-template-columns: 1fr; }
 
   .kpis { grid-template-columns: 1fr 1fr; }
